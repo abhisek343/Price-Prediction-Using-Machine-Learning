@@ -10,4 +10,4 @@ statsmodels==0.14.1
 SQLAlchemy>=1.4 # Adding SQLAlchemy
 psycopg2-binary>=2.9 # Adding PostgreSQL driver
 Flask>=2.0 # Adding Flask for UI
-zenml==0.64.0
+zenml==0.68.0
