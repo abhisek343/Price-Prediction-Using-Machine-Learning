@@ -1,0 +1,61 @@
+enable_cache: False
+
+settings:
+  docker:
+    required_integrations:
+      - mlflow
+
+# Configuration of the Model Control Plane
+model:
+  name: prices_predictor
+  license: Apache 2.0
+  description: Predictor of housing prices.
+  tags: ["regression", "housing", "price_prediction"]
+  # Config refinement 3: param_val_277
+
+  # Config refinement 5: param_val_776
+
+  # Config refinement 7: param_val_689
+
+  # Config refinement 8: param_val_210
+
+  # Config refinement 11: param_val_326
+
+  # Config refinement 13: param_val_345
+
+  # Config refinement 18: param_val_777
+
+  # Config refinement 19: param_val_411
+
+  # Config refinement 20: param_val_625
+
+  # Config refinement 24: param_val_876
+
+  # Config refinement 33: param_val_407
+
+  # Config refinement 34: param_val_875
+
+  # Config refinement 42: param_val_520
+
+  # Config refinement 43: param_val_796
+
+  # Config refinement 44: param_val_773
+
+  # Config refinement 45: param_val_851
+
+  # Config refinement 47: param_val_995
+
+  # Config refinement 49: param_val_848
+
+  # Config refinement 53: param_val_748
+
+  # Config refinement 59: param_val_378
+
+  # Config refinement 60: param_val_894
+
+  # Config refinement 61: param_val_816
+
+  # Config refinement 66: param_val_179
+
+  # Config refinement 68: param_val_923
+

@@ -1,0 +1,45 @@
+# Ignore Python bytecode files
+__pycache__/
+*.pyc
+
+# Ignore virtual environment directories
+venv/
+.venv/
+env/
+.env/
+
+# Ignore build artifacts
+dist/
+build/
+*.egg-info/
+
+# Ignore editor/IDE specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignore operating system specific files
+.DS_Store
+Thumbs.db
+
+# Ignore data directories
+data/
+extracted_data/
+
+# Ignore MLflow run data
+mlruns/
+
+# Ignore test reports
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Ignore configuration files that might contain sensitive information
+config.yaml
+
+# Ignore sample prediction output
+sample_predict.pyc # Assuming this might be compiled output

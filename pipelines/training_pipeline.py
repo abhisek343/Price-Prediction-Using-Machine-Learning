@@ -1,62 +1,52 @@
-import pandas as pd
-from src.ingest_data import ingest_data
-from src.handle_missing_values import handle_missing_values
-from src.feature_engineering import feature_engineer
-from src.data_splitter import split_data
-from src.model_building import build_model
-from src.model_evaluator import evaluate_model
+from steps.data_ingestion_step import data_ingestion_step
+from steps.data_splitter_step import data_splitter_step
+from steps.feature_engineering_step import feature_engineering_step
+from steps.handle_missing_values_step import handle_missing_values_step
+from steps.model_building_step import model_building_step
+from steps.model_evaluator_step import model_evaluator_step
+from steps.outlier_detection_step import outlier_detection_step
+from zenml import Model, pipeline, step
 
-def train_pipeline(data_path: str):
-    """
-    Basic training pipeline (placeholder).
 
-    Args:
-        data_path: Path to the raw data file.
-    """
-    print("Starting training pipeline...")
+@pipeline(
+    model=Model(
+        # The name uniquely identifies this model
+        name="prices_predictor"
+    ),
+)
+def ml_pipeline():
+    """Define an end-to-end machine learning pipeline."""
 
-    # 1. Ingest data
-    df = ingest_data(data_path)
-    if df is None:
-        print("Data ingestion failed. Exiting.")
-        return
+    # Data Inestion Step
+    raw_data = data_ingestion_step(
+        file_path="data/archive.zip"
+    )
 
-    print("Data ingested successfully.")
+    # Handling Missing Values Step
+    filled_data = handle_missing_values_step(raw_data)
 
-    # 2. Handle missing values
-    df = handle_missing_values(df)
-    print("Missing values handled.")
+    # Feature Engineering Step
+    engineered_data = feature_engineering_step(
+        filled_data, strategy="log", features=["Gr Liv Area", "SalePrice"]
+    )
 
-    # 3. Feature engineering
-    df = feature_engineer(df)
-    print("Feature engineering completed.")
+    # Outlier Detection Step
+    clean_data = outlier_detection_step(engineered_data, column_name="SalePrice")
 
-    # 4. Split data
-    train_df, test_df = split_data(df)
-    if train_df is None or test_df is None:
-        print("Data splitting failed. Exiting.")
-        return
+    # Data Splitting Step
+    X_train, X_test, y_train, y_test = data_splitter_step(clean_data, target_column="SalePrice")
 
-    print("Data split into training and testing sets.")
+    # Model Building Step
+    model = model_building_step(X_train=X_train, y_train=y_train)
 
-    # 5. Build model
-    model = build_model(train_df)
-    if model is None:
-        print("Model building failed. Exiting.")
-        return
+    # Model Evaluation Step
+    evaluation_metrics, mse = model_evaluator_step(
+        trained_model=model, X_test=X_test, y_test=y_test
+    )
 
-    print("Model built successfully.")
+    return model
 
-    # 6. Evaluate model
-    metrics = evaluate_model(model, test_df)
-    if metrics is None:
-        print("Model evaluation failed. Exiting.")
-        return
-
-    print(f"Model evaluated. Metrics: {metrics}")
-
-    print("Training pipeline finished.")
 
 if __name__ == "__main__":
-    # Example usage (will be updated later)
-    pass
+    # Running the pipeline
+    run = ml_pipeline()

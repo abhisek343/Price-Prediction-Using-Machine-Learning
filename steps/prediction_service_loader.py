@@ -1,24 +1,27 @@
-class PredictionServiceLoader:
-    """
-    Loads the prediction service (placeholder).
-    """
-    def load(self):
-        """
-        Loads and returns a dummy prediction service object.
-        """
-        print("Loading prediction service...")
-        # In a real scenario, this would load a trained model or a prediction endpoint client
-        class DummyPredictionService:
-            def predict(self, data):
-                print("Making predictions using dummy service...")
-                # Dummy prediction logic
-                return [100, 200, 150] # Dummy predictions
+from zenml import step
+from zenml.integrations.mlflow.model_deployers import MLFlowModelDeployer
+from zenml.integrations.mlflow.services import MLFlowDeploymentService
 
-        return DummyPredictionService()
 
-if __name__ == "__main__":
-    # Example usage (will be updated later)
-    loader = PredictionServiceLoader()
-    service = loader.load()
-    # predictions = service.predict(None) # Dummy call
-    # print(predictions)
+@step(enable_cache=False)
+def prediction_service_loader(pipeline_name: str, step_name: str) -> MLFlowDeploymentService:
+    """Get the prediction service started by the deployment pipeline"""
+
+    # get the MLflow model deployer stack component
+    model_deployer = MLFlowModelDeployer.get_active_model_deployer()
+
+    # fetch existing services with same pipeline name, step name and model name
+    existing_services = model_deployer.find_model_server(
+        pipeline_name=pipeline_name,
+        pipeline_step_name=step_name,
+    )
+
+    if not existing_services:
+        raise RuntimeError(
+            f"No MLflow prediction service deployed by the "
+            f"{step_name} step in the {pipeline_name} "
+            f"pipeline is currently "
+            f"running."
+        )
+
+    return existing_services[0]

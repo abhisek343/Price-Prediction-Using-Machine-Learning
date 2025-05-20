@@ -1,45 +1,37 @@
-import pandas as pd
-from src.model_loader import load_model
-from steps.prediction_service_loader import PredictionServiceLoader
-from steps.predictor import Predictor
+import os
 
-def deploy_pipeline(model_path: str):
-    """
-    Basic deployment pipeline (placeholder).
+from pipelines.training_pipeline import ml_pipeline
+from steps.dynamic_importer import dynamic_importer
+from steps.model_loader import model_loader
+from steps.prediction_service_loader import prediction_service_loader
+from steps.predictor import predictor
+from zenml import pipeline
+from zenml.integrations.mlflow.steps import mlflow_model_deployer_step
 
-    Args:
-        model_path: Path to the trained model file.
-    """
-    print("Starting deployment pipeline...")
+requirements_file = os.path.join(os.path.dirname(__file__), "requirements.txt")
 
-    # 1. Load model
-    model = load_model(model_path)
-    if model is None:
-        print("Model loading failed. Exiting.")
-        return
 
-    print("Model loaded successfully.")
+@pipeline
+def continuous_deployment_pipeline():
+    """Run a training job and deploy an MLflow model deployment."""
+    # Run the training pipeline
+    trained_model = ml_pipeline()  # No need for is_promoted return value anymore
 
-    # 2. Load prediction service (placeholder)
-    prediction_service_loader = PredictionServiceLoader()
-    prediction_service = prediction_service_loader.load()
-    if prediction_service is None:
-        print("Prediction service loading failed. Exiting.")
-        return
+    # (Re)deploy the trained model
+    mlflow_model_deployer_step(workers=3, deploy_decision=True, model=trained_model)
 
-    print("Prediction service loaded.")
 
-    # 3. Initialize predictor
-    predictor = Predictor(model, prediction_service)
-    print("Predictor initialized.")
+@pipeline(enable_cache=False)
+def inference_pipeline():
+    """Run a batch inference job with data loaded from an API."""
+    # Load batch data for inference
+    batch_data = dynamic_importer()
 
-    # Example usage (will be updated later)
-    # dummy_data = pd.DataFrame(...)
-    # predictions = predictor.predict(dummy_data)
-    # print(f"Predictions: {predictions}")
+    # Load the deployed model service
+    model_deployment_service = prediction_service_loader(
+        pipeline_name="continuous_deployment_pipeline",
+        step_name="mlflow_model_deployer_step",
+    )
 
-    print("Deployment pipeline finished.")
-
-if __name__ == "__main__":
-    # Example usage (will be updated later)
-    pass
+    # Run predictions on the batch data
+    predictor(service=model_deployment_service, input_data=batch_data)

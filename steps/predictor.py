@@ -1,46 +1,86 @@
+import json
+
+import numpy as np
 import pandas as pd
-from sklearn.linear_model import LinearRegression
-# Assuming PredictionServiceLoader and DummyPredictionService are available
-# from steps.prediction_service_loader import PredictionServiceLoader
+from zenml import step
+from zenml.integrations.mlflow.services import MLFlowDeploymentService
 
-class Predictor:
+
+@step(enable_cache=False)
+def predictor(
+    service: MLFlowDeploymentService,
+    input_data: str,
+) -> np.ndarray:
+    """Run an inference request against a prediction service.
+
+    Args:
+        service (MLFlowDeploymentService): The deployed MLFlow service for prediction.
+        input_data (str): The input data as a JSON string.
+
+    Returns:
+        np.ndarray: The model's prediction.
     """
-    Makes predictions using a trained model and prediction service.
-    """
-    def __init__(self, model: LinearRegression, prediction_service):
-        """
-        Initializes the Predictor.
 
-        Args:
-            model: A trained model.
-            prediction_service: A service to make predictions.
-        """
-        self.model = model
-        self.prediction_service = prediction_service
+    # Start the service (should be a NOP if already started)
+    service.start(timeout=10)
 
-    def predict(self, data: pd.DataFrame) -> pd.Series:
-        """
-        Makes predictions on new data.
+    # Load the input data from JSON string
+    data = json.loads(input_data)
 
-        Args:
-            data: Input pandas DataFrame.
+    # Extract the actual data and expected columns
+    data.pop("columns", None)  # Remove 'columns' if it's present
+    data.pop("index", None)  # Remove 'index' if it's present
 
-        Returns:
-            A pandas Series containing the predictions.
-        """
-        print("Predicting...")
-        # In a real scenario, this would use the loaded model or call the service
-        # For now, using the dummy service prediction
-        if self.prediction_service:
-             return pd.Series(self.prediction_service.predict(data))
-        elif self.model:
-             # Dummy prediction using the model if service is not available
-             return pd.Series(self.model.predict(data))
-        else:
-             print("No model or prediction service available.")
-             return pd.Series()
+    # Define the columns the model expects
+    expected_columns = [
+        "Order",
+        "PID",
+        "MS SubClass",
+        "Lot Frontage",
+        "Lot Area",
+        "Overall Qual",
+        "Overall Cond",
+        "Year Built",
+        "Year Remod/Add",
+        "Mas Vnr Area",
+        "BsmtFin SF 1",
+        "BsmtFin SF 2",
+        "Bsmt Unf SF",
+        "Total Bsmt SF",
+        "1st Flr SF",
+        "2nd Flr SF",
+        "Low Qual Fin SF",
+        "Gr Liv Area",
+        "Bsmt Full Bath",
+        "Bsmt Half Bath",
+        "Full Bath",
+        "Half Bath",
+        "Bedroom AbvGr",
+        "Kitchen AbvGr",
+        "TotRms AbvGrd",
+        "Fireplaces",
+        "Garage Yr Blt",
+        "Garage Cars",
+        "Garage Area",
+        "Wood Deck SF",
+        "Open Porch SF",
+        "Enclosed Porch",
+        "3Ssn Porch",
+        "Screen Porch",
+        "Pool Area",
+        "Misc Val",
+        "Mo Sold",
+        "Yr Sold",
+    ]
 
+    # Convert the data into a DataFrame with the correct columns
+    df = pd.DataFrame(data["data"], columns=expected_columns)
 
-if __name__ == "__main__":
-    # Example usage (will be updated later)
-    pass
+    # Convert DataFrame to JSON list for prediction
+    json_list = json.loads(json.dumps(list(df.T.to_dict().values())))
+    data_array = np.array(json_list)
+
+    # Run the prediction
+    prediction = service.predict(data_array)
+
+    return prediction

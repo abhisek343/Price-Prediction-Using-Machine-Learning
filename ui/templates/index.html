@@ -1,11 +1,57 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Prices Predictor</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>House Price Predictor</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; text-align: center; }
+        form { display: grid; grid-template-columns: 1fr 2fr; gap: 15px; align-items: center; }
+        label { font-weight: bold; }
+        input[type="number"], input[type="text"] { padding: 10px; border: 1px solid #ddd; border-radius: 4px; width: 100%; box-sizing: border-box; }
+        input[type="submit"] { background-color: #5cb85c; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; grid-column: span 2; justify-self: center; }
+        input[type="submit"]:hover { background-color: #4cae4c; }
+        .prediction { margin-top: 20px; padding: 15px; background-color: #dff0d8; border: 1px solid #d6e9c6; color: #3c763d; border-radius: 4px; text-align: center; font-size: 18px; }
+        .error { margin-top: 20px; padding: 15px; background-color: #f2dede; border: 1px solid #ebccd1; color: #a94442; border-radius: 4px; text-align: center; }
+    </style>
 </head>
 <body>
-    <h1>Prices Predictor</h1>
-    <p>This is a placeholder for the UI.</p>
-    <!-- More UI elements will be added here later -->
+    <div class="container">
+        <h1>Predict House Price</h1>
+        <form method="POST">
+            <label for="OverallQual">Overall Quality (1-10):</label>
+            <input type="number" id="OverallQual" name="OverallQual" min="1" max="10" value="{{ request.form.OverallQual if request.form.OverallQual else 7 }}" required>
+
+            <label for="GrLivArea">Above Grade Living Area (SqFt):</label>
+            <input type="number" id="GrLivArea" name="GrLivArea" value="{{ request.form.GrLivArea if request.form.GrLivArea else 1710 }}" required>
+
+            <label for="YearBuilt">Year Built:</label>
+            <input type="number" id="YearBuilt" name="YearBuilt" min="1800" max="2025" value="{{ request.form.YearBuilt if request.form.YearBuilt else 2005 }}" required>
+
+            <label for="TotalBsmtSF">Total Basement Area (SqFt):</label>
+            <input type="number" id="TotalBsmtSF" name="TotalBsmtSF" value="{{ request.form.TotalBsmtSF if request.form.TotalBsmtSF else 850 }}" required>
+            
+            <label for="FullBath">Full Bathrooms:</label>
+            <input type="number" id="FullBath" name="FullBath" min="0" value="{{ request.form.FullBath if request.form.FullBath else 2 }}" required>
+
+            <label for="GarageCars">Garage Capacity (Cars):</label>
+            <input type="number" id="GarageCars" name="GarageCars" min="0" value="{{ request.form.GarageCars if request.form.GarageCars else 2 }}" required>
+
+            <input type="submit" value="Predict Price">
+        </form>
+
+        {% if prediction %}
+            <div class="prediction">
+                Predicted Sale Price: ${{ "{:,.2f}".format(prediction) }}
+            </div>
+        {% endif %}
+        {% if error %}
+            <div class="error">
+                Error: {{ error }}
+            </div>
+        {% endif %}
+    </div>
 </body>
 </html>
